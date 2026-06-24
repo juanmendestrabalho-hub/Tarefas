@@ -10,9 +10,13 @@ function save() {
   render();
 }
 
+/* =========================
+   ADD TASK
+========================= */
 function addTask() {
   const input = document.getElementById("taskInput");
-  if (!input.value.trim()) return;
+
+  if (!input || !input.value.trim()) return;
 
   data.todo.push({
     id: Date.now(),
@@ -23,14 +27,22 @@ function addTask() {
   save();
 }
 
+/* =========================
+   DELETE TASK
+========================= */
 function deleteTask(column, id) {
   data[column] = data[column].filter(t => t.id !== id);
   save();
 }
 
+/* =========================
+   RENDER BOARD
+========================= */
 function render() {
-  ["todo","doing","done"].forEach(col => {
+  ["todo", "doing", "done"].forEach(col => {
     const el = document.getElementById(col);
+    if (!el) return;
+
     el.innerHTML = "";
 
     data[col].forEach(task => {
@@ -38,7 +50,7 @@ function render() {
       div.className = "task";
       div.draggable = true;
 
-      div.ondragstart = e => {
+      div.ondragstart = (e) => {
         e.dataTransfer.setData("id", task.id);
         e.dataTransfer.setData("from", col);
       };
@@ -53,9 +65,14 @@ function render() {
   });
 }
 
-function allowDrop(e){ e.preventDefault(); }
+/* =========================
+   DRAG & DROP
+========================= */
+function allowDrop(e) {
+  e.preventDefault();
+}
 
-function drop(e){
+function drop(e) {
   e.preventDefault();
 
   const id = Number(e.dataTransfer.getData("id"));
@@ -63,6 +80,7 @@ function drop(e){
   const to = e.currentTarget.querySelector(".list").id;
 
   const task = data[from].find(t => t.id === id);
+  if (!task) return;
 
   data[from] = data[from].filter(t => t.id !== id);
   data[to].push(task);
@@ -70,18 +88,12 @@ function drop(e){
   save();
 }
 
-document.querySelectorAll(".column").forEach(col=>{
-  col.ondragover = allowDrop;
-  col.ondrop = drop;
-});
-
-render();
-
-
+/* =========================
+   IA CLASSIFIER
+========================= */
 function classifyTask(text) {
   const t = text.toLowerCase();
 
-  // concluído
   if (
     t.includes("feito") ||
     t.includes("finalizado") ||
@@ -89,7 +101,6 @@ function classifyTask(text) {
     t.includes("done")
   ) return "done";
 
-  // em progresso
   if (
     t.includes("em andamento") ||
     t.includes("trabalhando") ||
@@ -98,10 +109,37 @@ function classifyTask(text) {
     t.includes("implement")
   ) return "doing";
 
-  // padrão
   return "todo";
 }
 
+/* =========================
+   IA AUTO ORGANIZE (FALTAVA!)
+========================= */
+function autoOrganize() {
+  const allTasks = [
+    ...data.todo,
+    ...data.doing,
+    ...data.done
+  ];
+
+  data = {
+    todo: [],
+    doing: [],
+    done: []
+  };
+
+  allTasks.forEach(task => {
+    const target = classifyTask(task.text);
+    data[target].push(task);
+  });
+
+  save();
+  showAIToast("🤖 IA organizou suas tarefas!");
+}
+
+/* =========================
+   TOAST UI
+========================= */
 function showAIToast(msg) {
   const div = document.createElement("div");
 
@@ -123,3 +161,15 @@ function showAIToast(msg) {
 
   setTimeout(() => div.remove(), 2500);
 }
+
+/* =========================
+   INIT SAFE
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".column").forEach(col => {
+    col.ondragover = allowDrop;
+    col.ondrop = drop;
+  });
+
+  render();
+});
