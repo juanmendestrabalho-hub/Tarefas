@@ -1,1 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neon Task Board</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
 
+<body>
+
+  <header>
+    <h1>⚡ Neon Task Board</h1>
+    <p>Organize suas tarefas como um sistema futurista</p>
+  </header>
+
+  <section class="input-area">
+    <input id="taskInput" placeholder="Digite uma nova tarefa..." />
+    <button onclick="addTask()">Adicionar</button>
+  </section>
+
+  <main class="board">
+
+    <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <h2>📌 A Fazer</h2>
+      <div id="todo" class="list"></div>
+    </div>
+
+    <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <h2>⚙️ Em Progresso</h2>
+      <div id="doing" class="list"></div>
+    </div>
+
+    <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <h2>✅ Concluído</h2>
+      <div id="done" class="list"></div>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
