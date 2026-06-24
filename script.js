@@ -76,3 +76,50 @@ document.querySelectorAll(".column").forEach(col=>{
 });
 
 render();
+
+
+function classifyTask(text) {
+  const t = text.toLowerCase();
+
+  // concluído
+  if (
+    t.includes("feito") ||
+    t.includes("finalizado") ||
+    t.includes("concluído") ||
+    t.includes("done")
+  ) return "done";
+
+  // em progresso
+  if (
+    t.includes("em andamento") ||
+    t.includes("trabalhando") ||
+    t.includes("progresso") ||
+    t.includes("develop") ||
+    t.includes("implement")
+  ) return "doing";
+
+  // padrão
+  return "todo";
+}
+
+function showAIToast(msg) {
+  const div = document.createElement("div");
+
+  div.textContent = msg;
+  div.style.position = "fixed";
+  div.style.bottom = "20px";
+  div.style.left = "50%";
+  div.style.transform = "translateX(-50%)";
+  div.style.padding = "12px 18px";
+  div.style.background = "rgba(0,245,255,0.2)";
+  div.style.backdropFilter = "blur(10px)";
+  div.style.border = "1px solid #00f5ff";
+  div.style.borderRadius = "12px";
+  div.style.color = "white";
+  div.style.zIndex = "9999";
+  div.style.animation = "fadeIn 0.3s ease";
+
+  document.body.appendChild(div);
+
+  setTimeout(() => div.remove(), 2500);
+}
