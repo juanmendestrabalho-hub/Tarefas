@@ -5,44 +5,97 @@ let data = JSON.parse(localStorage.getItem("tasks")) || {
   done: []
 };
 
+let xpData = JSON.parse(localStorage.getItem("xp")) || {
+  xp: 0,
+  level: 1,
+  streak: 0,
+  lastDate: null
+};
+
+/* ================= XP SYSTEM ================= */
+
+function addXP(value = 10) {
+  xpData.xp += value;
+
+  const needed = xpData.level * 50;
+
+  if (xpData.xp >= needed) {
+    xpData.level++;
+    showAIToast("🏆 Level Up!");
+  }
+
+  updateStreak();
+  saveXP();
+}
+
+function updateStreak() {
+  const today = new Date().toDateString();
+
+  if (xpData.lastDate !== today) {
+    xpData.streak += 1;
+    xpData.lastDate = today;
+  }
+}
+
+function saveXP() {
+  localStorage.setItem("xp", JSON.stringify(xpData));
+  updateXPUI();
+}
+
+function updateXPUI() {
+  document.getElementById("xp").innerText = xpData.xp;
+  document.getElementById("level").innerText = xpData.level;
+  document.getElementById("streak").innerText = xpData.streak;
+
+  const progress = (xpData.xp % (xpData.level * 50)) / (xpData.level * 50) * 100;
+  document.getElementById("progress").style.width = progress + "%";
+}
+
+/* ================= TASK SYSTEM ================= */
+
 function save() {
   localStorage.setItem("tasks", JSON.stringify(data));
   render();
+  updateXPUI();
 }
 
-/* =========================
-   ADD TASK
-========================= */
 function addTask() {
   const input = document.getElementById("taskInput");
 
-  if (!input || !input.value.trim()) return;
+  if (!input.value.trim()) return;
 
   data.todo.push({
     id: Date.now(),
-    text: input.value
+    text: input.value,
+    done: false
   });
 
   input.value = "";
   save();
 }
 
-/* =========================
-   DELETE TASK
-========================= */
 function deleteTask(column, id) {
   data[column] = data[column].filter(t => t.id !== id);
   save();
 }
 
-/* =========================
-   RENDER BOARD
-========================= */
-function render() {
-  ["todo", "doing", "done"].forEach(col => {
-    const el = document.getElementById(col);
-    if (!el) return;
+/* ================= COMPLETE TASK (GANHA XP) ================= */
 
+function completeTask(column, id) {
+  const task = data[column].find(t => t.id === id);
+  if (!task) return;
+
+  addXP(10);
+
+  task.done = true;
+  save();
+}
+
+/* ================= RENDER ================= */
+
+function render() {
+  ["todo","doing","done"].forEach(col => {
+    const el = document.getElementById(col);
     el.innerHTML = "";
 
     data[col].forEach(task => {
@@ -50,14 +103,20 @@ function render() {
       div.className = "task";
       div.draggable = true;
 
-      div.ondragstart = (e) => {
+      div.ondragstart = e => {
         e.dataTransfer.setData("id", task.id);
         e.dataTransfer.setData("from", col);
       };
 
       div.innerHTML = `
-        ${task.text}
-        <span class="delete" onclick="deleteTask('${col}', ${task.id})">✖</span>
+        <span style="text-decoration:${task.done ? 'line-through' : 'none'}">
+          ${task.text}
+        </span>
+
+        <div>
+          <span onclick="completeTask('${col}', ${task.id})">✔</span>
+          <span onclick="deleteTask('${col}', ${task.id})">✖</span>
+        </div>
       `;
 
       el.appendChild(div);
@@ -65,14 +124,11 @@ function render() {
   });
 }
 
-/* =========================
-   DRAG & DROP
-========================= */
-function allowDrop(e) {
-  e.preventDefault();
-}
+/* ================= DRAG & DROP ================= */
 
-function drop(e) {
+function allowDrop(e){ e.preventDefault(); }
+
+function drop(e){
   e.preventDefault();
 
   const id = Number(e.dataTransfer.getData("id"));
@@ -88,58 +144,37 @@ function drop(e) {
   save();
 }
 
-/* =========================
-   IA CLASSIFIER
-========================= */
+document.querySelectorAll(".column").forEach(col=>{
+  col.ondragover = allowDrop;
+  col.ondrop = drop;
+});
+
+/* ================= IA ================= */
+
 function classifyTask(text) {
   const t = text.toLowerCase();
 
-  if (
-    t.includes("feito") ||
-    t.includes("finalizado") ||
-    t.includes("concluído") ||
-    t.includes("done")
-  ) return "done";
-
-  if (
-    t.includes("em andamento") ||
-    t.includes("trabalhando") ||
-    t.includes("progresso") ||
-    t.includes("develop") ||
-    t.includes("implement")
-  ) return "doing";
+  if (t.includes("feito") || t.includes("done")) return "done";
+  if (t.includes("progresso") || t.includes("working")) return "doing";
 
   return "todo";
 }
 
-/* =========================
-   IA AUTO ORGANIZE (FALTAVA!)
-========================= */
 function autoOrganize() {
-  const allTasks = [
-    ...data.todo,
-    ...data.doing,
-    ...data.done
-  ];
+  const all = [...data.todo, ...data.doing, ...data.done];
 
-  data = {
-    todo: [],
-    doing: [],
-    done: []
-  };
+  data = { todo: [], doing: [], done: [] };
 
-  allTasks.forEach(task => {
-    const target = classifyTask(task.text);
-    data[target].push(task);
+  all.forEach(task => {
+    data[classifyTask(task.text)].push(task);
   });
 
   save();
-  showAIToast("🤖 IA organizou suas tarefas!");
+  showAIToast("🤖 IA reorganizou tudo!");
 }
 
-/* =========================
-   TOAST UI
-========================= */
+/* ================= TOAST ================= */
+
 function showAIToast(msg) {
   const div = document.createElement("div");
 
@@ -155,21 +190,12 @@ function showAIToast(msg) {
   div.style.borderRadius = "12px";
   div.style.color = "white";
   div.style.zIndex = "9999";
-  div.style.animation = "fadeIn 0.3s ease";
 
   document.body.appendChild(div);
 
   setTimeout(() => div.remove(), 2500);
 }
 
-/* =========================
-   INIT SAFE
-========================= */
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".column").forEach(col => {
-    col.ondragover = allowDrop;
-    col.ondrop = drop;
-  });
-
-  render();
-});
+/* INIT */
+updateXPUI();
+render();
