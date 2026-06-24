@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Neon Task Board</title>
+  <title>TESTE DE DASH</title>
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#00f5ff">
@@ -17,11 +17,36 @@
   <div class="bg-glow"></div>
 
   <header class="fade-in">
-    <h1>⚡ Dash Board</h1>
-    <p>Fluxo de tarefas inteligente</p>
+    <h1>⚡ Dash Board XP</h1>
+    <p>Produtividade gamificada + IA</p>
   </header>
 
-  <!-- INPUT AREA -->
+  <!-- XP DASHBOARD -->
+  <section class="xp-dashboard">
+
+    <div class="xp-card">
+      <h3>⭐ Nível</h3>
+      <p id="level">1</p>
+    </div>
+
+    <div class="xp-card">
+      <h3>🔥 XP</h3>
+      <p id="xp">0</p>
+    </div>
+
+    <div class="xp-card">
+      <h3>🏆 Streak</h3>
+      <p id="streak">0</p>
+    </div>
+
+  </section>
+
+  <!-- PROGRESS BAR -->
+  <div class="xp-bar">
+    <div id="progress"></div>
+  </div>
+
+  <!-- INPUT -->
   <section class="input-area slide-up">
 
     <input id="taskInput" placeholder="Nova tarefa..." />
@@ -30,11 +55,12 @@
 
   </section>
 
-  <!-- IA BUTTON SEPARADO (melhor UX e evita bug visual) -->
+  <!-- IA -->
   <section class="ai-bar">
     <button onclick="autoOrganize()">🤖 Auto-organizar IA</button>
   </section>
 
+  <!-- BOARD -->
   <main class="board">
 
     <div class="column glass">
@@ -63,4 +89,6 @@
   </script>
 
 </body>
+
+  
 </html>
